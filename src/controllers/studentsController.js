@@ -16,8 +16,8 @@ export const getStudents = async (req, res) => {
   } = req.query;
   const skip = (page - 1) * perPage;
 
-  // Створюємо базовий запит до колекції
-  const studentsQuery = Student.find();
+  // Створюємо базовий запит до колекції, Додаємо критерій пошуку тільки студентів поточного користувача
+  const studentsQuery = Student.find({ userId: req.user._id });
 
   // Будуємо фільтр
 
@@ -66,7 +66,11 @@ export const getStudents = async (req, res) => {
 
 export const getStudentById = async (req, res) => {
   const { studentId } = req.params;
-  const student = await Student.findById(studentId);
+  const student = await Student.findOne({
+    _id: studentId,
+    //Додаємо критерій пошуку тільки студента поточного користувача
+    userId: req.user._id,
+  });
   if (!student) {
     // throw new Error('Student not found');
     throw createHttpError(404, 'Student not found');
@@ -75,7 +79,11 @@ export const getStudentById = async (req, res) => {
 };
 
 export const createStudent = async (req, res) => {
-  const student = await Student.create(req.body);
+  const student = await Student.create({
+    ...req.body,
+    // Додаємо властивість userId
+    userId: req.user._id,
+  });
   res.status(201).json(student);
 };
 
@@ -83,6 +91,8 @@ export const deleteStudent = async (req, res) => {
   const { studentId } = req.params;
   const student = await Student.findOneAndDelete({
     _id: studentId,
+    // Критерій пошуку по userId
+    userId: req.user._id,
   });
 
   if (!student) {
@@ -96,7 +106,8 @@ export const updateStudent = async (req, res) => {
   const { studentId } = req.params;
 
   const student = await Student.findOneAndUpdate(
-    { _id: studentId }, // Шукаємо по id
+    // Критерій пошуку по studentId та userId
+    { _id: studentId, userId: req.user._id },
     req.body,
     { returnDocument: 'after' }, // повертаємо оновлений документ
   );

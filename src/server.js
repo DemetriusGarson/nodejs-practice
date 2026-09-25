@@ -10,6 +10,7 @@ import studentsRoutes from './routes/studentsRoutes.js';
 import { timeLogger } from './middleware/timeLogger.js';
 import { errors } from 'celebrate';
 import authRoutes from './routes/authRoutes.js';
+import cookieParser from 'cookie-parser';
 
 const app = express();
 const PORT = process.env.PORT ?? 3000;
@@ -22,6 +23,9 @@ app.use(express.json());
 
 // Дозволяє запити з будь-яких джерел
 app.use(cors());
+
+// Middleware парсер кук
+app.use(cookieParser());
 
 // Приклад логування часу
 app.use(timeLogger);
