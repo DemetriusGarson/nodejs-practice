@@ -9,6 +9,7 @@ import { logger } from './middleware/logger.js';
 import studentsRoutes from './routes/studentsRoutes.js';
 import { timeLogger } from './middleware/timeLogger.js';
 import { errors } from 'celebrate';
+import authRoutes from './routes/authRoutes.js';
 
 const app = express();
 const PORT = process.env.PORT ?? 3000;
@@ -29,6 +30,9 @@ app.use(timeLogger);
 app.get('/', (req, res) => {
   res.status(200).json({ message: 'Hello world' });
 });
+
+// підключаємо групу маршрутів auth
+app.use(authRoutes);
 
 // підключаємо групу маршрутів студента
 app.use(studentsRoutes);
