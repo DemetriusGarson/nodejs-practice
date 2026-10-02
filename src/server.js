@@ -11,6 +11,7 @@ import { timeLogger } from './middleware/timeLogger.js';
 import { errors } from 'celebrate';
 import authRoutes from './routes/authRoutes.js';
 import cookieParser from 'cookie-parser';
+import userRoutes from './routes/userRoutes.js';
 
 const app = express();
 const PORT = process.env.PORT ?? 3000;
@@ -37,6 +38,9 @@ app.get('/', (req, res) => {
 
 // підключаємо групу маршрутів auth
 app.use(authRoutes);
+
+// Додаємо раути користувача
+app.use(userRoutes);
 
 // підключаємо групу маршрутів студента
 app.use(studentsRoutes);
