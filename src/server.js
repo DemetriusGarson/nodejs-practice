@@ -1,7 +1,13 @@
 import express from 'express';
 import cors from 'cors';
-import pino from 'pino-http';
+
 import 'dotenv/config';
+import { connectMongoDB } from './db/connectMongoDB.js';
+import { errorHandler } from './middleware/errorHandler.js';
+import { notFoundHandler } from './middleware/notFoundHandler.js';
+import { logger } from './middleware/logger.js';
+import studentsRoutes from './routes/studentsRoutes.js';
+import { timeLogger } from './middleware/timeLogger.js';
 
 const app = express();
 const PORT = process.env.PORT ?? 3000;
@@ -12,6 +18,9 @@ const users = [
   { id: 3, name: 'Alice3' },
 ];
 
+// Логування
+app.use(logger);
+
 // Middleware для парсингу JSON
 app.use(express.json());
 
@@ -19,29 +28,10 @@ app.use(express.json());
 app.use(cors());
 
 // Приклад логування часу
-app.use((req, res, next) => {
-  console.log(`Time: ${new Date().toLocaleString()}`);
-  next();
-});
+app.use(timeLogger);
 
-// Логування
-app.use(
-  pino({
-    level: 'info',
-    transport: {
-      target: 'pino-pretty',
-      options: {
-        colorize: true,
-        translateTime: 'SYS:HH:MM:ss',
-        timezone: 'Europe/Kyiv', // строчка для отоброжения актуального времени (не работает?)
-        ignore: 'pid,hostname',
-        messageFormat:
-          '{req.method} {req.url} {res.statusCode} - {responseTime}ms',
-        hideObject: true,
-      },
-    },
-  }),
-);
+// підключаємо групу маршрутів студента
+app.use(studentsRoutes);
 
 // Перший маршрут
 app.get('/', (req, res) => {
@@ -74,26 +64,16 @@ app.get('/test-error', (req, res) => {
   throw new Error('Something went wrong');
 });
 
+//! Модуль 2 /////////////////////////////////////////////
+
 // Пример обработки не существующих маршрутов, добавил переменную path для отображения машрута
-app.use((req, res) => {
-  const path = req.url;
-  res.status(404).json({
-    message: '404 page not found',
-    path,
-  });
-});
+app.use(notFoundHandler);
 
 // мидлвер для перехоплення помилок
-app.use((err, req, res, next) => {
-  console.error(err);
-  const isProd = process.env.NODE_ENV === 'production';
-  res.status(500).json({
-    message: isProd
-      ? 'Something went wrong. Please try again later.'
-      : err.message,
-    // error: err.message,
-  });
-});
+app.use(errorHandler);
+
+// підключення до MongoDB
+await connectMongoDB();
 
 // Запуск сервера
 app.listen(PORT, () => {
